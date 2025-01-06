@@ -1,5 +1,13 @@
 #!/command/with-contenv bash
 
+# Ensure machine-id is generated to prevent freepbx installation PHP shell_exec from returning null
+apt-get update
+apt-get install -y dbus npm  
+
+dbus-uuidgen > /etc/machine-id 
+cp /etc/machine-id /var/lib/dbus/machine-id
+chmod 644 /etc/machine-id /var/lib/dbus/machine-id  
+
 source /assets/functions/00-container
 prepare_service single
 # shellcheck disable=SC2034
@@ -79,7 +87,8 @@ EOF
 
   mkdir -p /usr/src/freepbx
   cd /usr/src || exit
-  curl -ssL https://github.com/FreePBX/framework/archive/release/"${FREEPBX_VERSION}".tar.gz| tar xfz - --strip 1 -C /usr/src/freepbx
+  print_notice "Grabbing freepbx from http://mirror.freepbx.org/modules/packages/freepbx/freepbx-"${FREEPBX_VERSION}".tgz"
+  curl -ssL http://mirror.freepbx.org/modules/packages/freepbx/freepbx-"${FREEPBX_VERSION}".tgz| tar xfz - --strip 1 -C /usr/src/freepbx
 
   silent sudo -u asterisk gpg --refresh-keys --keyserver hkp://keyserver.ubuntu.com:80
   silent sudo -u asterisk gpg --import /usr/src/freepbx/amp_conf/htdocs/admin/libraries/BMO/1588A7366BD35B34.key
@@ -303,8 +312,8 @@ if var_true "$DB_EMBEDDED" ;  then
   fi
 
 ### Set RTP ports and fix a FreePBX bug with upgrades
-  print_notice "Setting RTP ports - start: '${RTP_START}' finish: '${RTP_FINISH}'"
-  mysql -e 'USE asterisk; ALTER TABLE featurecodes CHANGE column helptext helptext VARCHAR(10000); INSERT INTO sipsettings (keyword, data, seq, type) VALUES ("rtpstart","'"$RTP_START"'",1,0) ON DUPLICATE KEY UPDATE data="'"$RTP_START"'";INSERT INTO sipsettings (keyword, data, seq, type) VALUES ("rtpend","'"$RTP_FINISH"'",1,0) ON DUPLICATE KEY UPDATE data="'"$RTP_FINISH"'";'
+  #print_notice "Setting RTP ports - start: '${RTP_START}' finish: '${RTP_FINISH}'"
+  #mysql -e 'USE asterisk; ALTER TABLE featurecodes CHANGE column helptext helptext VARCHAR(10000); INSERT INTO sipsettings (keyword, data, seq, type) VALUES ("rtpstart","'"$RTP_START"'",1,0) ON DUPLICATE KEY UPDATE data="'"$RTP_START"'";INSERT INTO sipsettings (keyword, data, seq, type) VALUES ("rtpend","'"$RTP_FINISH"'",1,0) ON DUPLICATE KEY UPDATE data="'"$RTP_FINISH"'";'
 else
 ### Setup dynamic configuration
   print_notice "Setting configuration"
@@ -346,8 +355,8 @@ Port = $DB_PORT
 option = 3
 EOF
 ### Set RTP ports and fix a FreePBX bug with upgrades
-  print_notice "Setting RTP ports - start: '${RTP_START}' finish: '${RTP_FINISH}'"
-  mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" -P"$DB_PORT" -e 'USE '"$DB_NAME"'; ALTER TABLE featurecodes CHANGE column helptext helptext VARCHAR(10000); INSERT INTO sipsettings (keyword, data, seq, type) VALUES ("rtpstart","'"$RTP_START"'",1,0) ON DUPLICATE KEY UPDATE data="'"$RTP_START"'";INSERT INTO sipsettings (keyword, data, seq, type) VALUES ("rtpend","'"$RTP_FINISH"'",1,0) ON DUPLICATE KEY UPDATE data="'"$RTP_FINISH"'";'
+  #print_notice "Setting RTP ports - start: '${RTP_START}' finish: '${RTP_FINISH}'"
+  #mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" -P"$DB_PORT" -e 'USE '"$DB_NAME"'; ALTER TABLE featurecodes CHANGE column helptext helptext VARCHAR(10000); INSERT INTO sipsettings (keyword, data, seq, type) VALUES ("rtpstart","'"$RTP_START"'",1,0) ON DUPLICATE KEY UPDATE data="'"$RTP_START"'";INSERT INTO sipsettings (keyword, data, seq, type) VALUES ("rtpend","'"$RTP_FINISH"'",1,0) ON DUPLICATE KEY UPDATE data="'"$RTP_FINISH"'";'
 fi
 
 if [ ! -f /etc/asterisk/cdr_adaptive_odbc.conf ]; then
