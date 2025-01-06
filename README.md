@@ -14,8 +14,8 @@
 Dockerfile to build a [FreePBX](https://www.freepbx.org) - A Voice over IP manager for Asterisk.
 Upon starting this image it will give you a turn-key PBX system for SIP calling.
 
-* Latest release FreePBX 15
-* Latest release Asterisk 17
+* Latest release FreePBX 17.0-latest-EDGE
+* Latest release Asterisk 22.1.0
 * Choice of running embedded database or modifies to support external MariaDB Database and only require one DB.
 * Supports data persistence
 * Fail2Ban installed to block brute force attacks
